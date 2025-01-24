@@ -1,28 +1,24 @@
 package com.automwrite.assessment.service;
 
-import com.automwrite.assessment.model.client.ClientData;
-import com.automwrite.assessment.model.organization.OrganizationData;
-import com.google.gson.Gson;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
+import com.automwrite.assessment.model.Client;
+import com.automwrite.assessment.model.Organisation;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
-@Service
-public class JsonParserService {
-    private final Gson gson = new Gson();
-    private final ClassPathResource clientJsonResource = new ClassPathResource("clientinfo/client.json");
-    private final ClassPathResource orgJsonResource = new ClassPathResource("orginfo/org.json");
+public interface JsonParserService {
+    /**
+     * Parse client JSON file into Client object
+     * @param filePath Path to the client JSON file
+     * @return Parsed Client object
+     * @throws IOException If file cannot be read or parsed
+     */
+    Client parseClientJson(String filePath) throws IOException;
 
-    public ClientData loadClientData() throws IOException {
-        String json = new String(clientJsonResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        return gson.fromJson(json, ClientData.class);
-    }
-
-    public OrganizationData loadOrganizationData() throws IOException {
-        String json = new String(orgJsonResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        return gson.fromJson(json, OrganizationData.class);
-    }
+    /**
+     * Parse organisation JSON file into Organisation object
+     * @param filePath Path to the organisation JSON file
+     * @return Parsed Organisation object
+     * @throws IOException If file cannot be read or parsed
+     */
+    Organisation parseOrganisationJson(String filePath) throws IOException;
 }
-

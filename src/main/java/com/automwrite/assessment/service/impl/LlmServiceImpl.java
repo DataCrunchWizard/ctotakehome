@@ -1,77 +1,103 @@
 package com.automwrite.assessment.service.impl;
 
+import com.automwrite.assessment.model.Client;
+import com.automwrite.assessment.model.Organisation;
 import com.automwrite.assessment.service.LlmService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
-@Slf4j
 @Service
+@RequiredArgsConstructor
 public class LlmServiceImpl implements LlmService {
-
-    private static final String ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final String apiKey;
-
-    public LlmServiceImpl(
-        RestTemplate restTemplate,
-        ObjectMapper objectMapper,
-        @Value("${anthropic.api.key}") String apiKey) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-        this.apiKey = apiKey;
-    }
+    
+    @Value("${claude.api.key}")
+    private String apiKey;
+    
+    @Value("${claude.api.url}")
+    private String apiUrl;
+    
+    private final WebClient.Builder webClientBuilder;
 
     @Override
-    public String generateText(String prompt) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("x-api-key", apiKey);
-            headers.set("anthropic-version", "2023-06-01");
+    public String processUserIntent(String userIntent, Client client, Organisation organisation) {
+        WebClient webClient = webClientBuilder
+            .baseUrl(apiUrl)
+            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build();
 
-            Map<String, Object> requestBody = Map.of(
-                "model", "claude-3-5-sonnet-20241022",
-                "max_tokens", 1024,  // Claude supports up to 8192 output tokens
-                "messages", new Object[]{
-                    Map.of("role", "user", "content", prompt)
-                }
-            );
-
-            var response = restTemplate.postForObject(
-                ANTHROPIC_API_URL,
-                new HttpEntity<>(requestBody, headers),
-                Map.class
-            );
-
-            if (response != null && response.containsKey("content")) {
-                List<Map<String, Object>> content = (List<Map<String, Object>>) response.get("content");
-                if (!content.isEmpty()) {
-                    return (String) content.get(0).get("text");
-                }
-            }
-
-            log.error("Unexpected response format: {}", response);
-            return "";
-        } catch (Exception e) {
-            log.error("Error generating text", e);
-            return "";
-        }
+        String prompt = buildPrompt(userIntent, client, organisation);
+        
+        return webClient.post()
+            .bodyValue(createRequestBody(prompt))
+            .retrieve()
+            .bodyToMono(String.class)
+            .map(this::extractRecommendationText)
+            .block();
     }
 
-    @Override
-    public CompletableFuture<String> generateTextAsync(String prompt) {
-        return CompletableFuture.supplyAsync(() -> generateText(prompt));
+    private String buildPrompt(String userIntent, Client client, Organisation organisation) {
+        return String.format("""
+            As a financial advisor, generate a professional recommendation letter based on the following:
+            
+            User Intent: %s
+            
+            Client Details:
+            - Name: %s %s
+            - Current Provider: %s
+            - Risk Tolerance: %s
+            - Investment Horizon: %s
+            
+            Target Platform Details:
+            %s
+            
+            Please provide a detailed recommendation that:
+            1. Acknowledges the client's request
+            2. Evaluates their current situation
+            3. Provides a clear recommendation with justification
+            4. Includes relevant fee information
+            5. Outlines next steps
+            
+            Use a professional tone and format suitable for a formal recommendation letter.
+            """,
+            userIntent,
+            client.getClientInfo().getPersonalDetails().getFirstName(),
+            client.getClientInfo().getPersonalDetails().getLastName(),
+            client.getClientInfo().getPensionPlans().getMarketBasedPlan() != null ? 
+                client.getClientInfo().getPensionPlans().getMarketBasedPlan().getProvider() :
+                client.getClientInfo().getPensionPlans().getGuaranteedPlan().getProvider(),
+            client.getClientInfo().getFinancialProfile().getRiskTolerance(),
+            client.getClientInfo().getFinancialProfile().getInvestmentHorizon(),
+            extractPlatformDetails(organisation)
+        );
+    }
+
+    private String extractPlatformDetails(Organisation organisation) {
+        StringBuilder details = new StringBuilder();
+        organisation.getOrganizationInfo().getPlatforms().getItems().forEach(platform -> {
+            details.append("Platform: ").append(platform.getName()).append("\n");
+            details.append("Description: ").append(platform.getDescription()).append("\n");
+            details.append("Features:\n");
+            platform.getFeatures().forEach(feature -> details.append("- ").append(feature).append("\n"));
+            details.append("\n");
+        });
+        return details.toString();
+    }
+
+    private Object createRequestBody(String prompt) {
+        // Create the appropriate request body structure for Claude API
+        // This would need to be adjusted based on the actual Claude API requirements
+        return new Object(); // Placeholder
+    }
+
+    private String extractRecommendationText(String response) {
+        // Extract the recommendation text from Claude API response
+        // This would need to be adjusted based on the actual Claude API response structure
+        return response; // Placeholder
     }
 }

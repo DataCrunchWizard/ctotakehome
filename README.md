@@ -1,49 +1,125 @@
 # Automwrite Take-Home Assessment
 
-Please find a copy of the assessment in this folder, along with all relevant input files (`userintent.txt`, `client.json`, `organisation.json`, and the template `.docx`). The exercise is to provide a `.docx` output that is client-presentable.
+A Spring Boot application that processes user intent from text files and generates client-presentable recommendation letters in Word format.
 
 ## Overview
-REST API that processes user intent from a `.txt` file, integrates it with data from JSON files, and outputs a formatted `.docx` document using the provided template.
 
-## Requirements
+This application provides a REST API that:
+1. Processes user intent from a `.txt` file
+2. Integrates it with client and organization data from JSON files
+3. Optionally uses Claude API for LLM-based text processing
+4. Outputs a formatted `.docx` document using a provided template
+
+## Prerequisites
+
 - Java 17
-- Apache POI
-- Spring Boot
+- Gradle
 - Claude API key (optional for LLM-based processing)
 
-## Input Files (found in the resources folder)
-- `userintent.txt`: Contains the user's intent to be processed.
-- `client.json`: Represents information about a client.
-- `organisation.json`: Represents information about the organisation and possible outcomes.
-- Template `.docx`: A Word document template where the processed user intent will be inserted.
+## Project Structure
 
-## Task
-1. Parse the `userintent.txt` file to extract the user's intent.
-2. Parse `client.json` and `organisation.json` into objects.
-3. Process the user intent and map it to the client and organisation details.
-4. Optionally use the LLM service to refine or transform the text.
-5. Insert the processed text into the relevant section of the provided `.docx` template.
-6. Save the output as a new `.docx` file.
+```
+src/main/
+├── java/com/automwrite/assessment/
+│   ├── config/           # Configuration classes
+│   ├── controller/       # REST controllers
+│   ├── model/           # Data models
+│   │   ├── client/      # Client-related models
+│   │   └── organization/ # Organization-related models
+│   └── service/         # Business logic services
+└── resources/
+    ├── clientinfo/      # Client JSON data
+    ├── orginfo/         # Organization JSON data
+    ├── templates/       # Word document templates
+    └── userintent/      # Sample user intent files
+```
 
-Feel free to use your own equivalent JSONS or intent .txt files if of equivalent complexity should you find this preferable. 
+## Configuration
 
-## API Endpoint
+1. Set up environment variables:
+   ```bash
+   export CLAUDE_API_KEY=your_api_key_here
+   ```
 
-POST /api/user-request Body: multipart/form-data
+2. Configure application properties in `src/main/resources/application.properties`:
+   ```properties
+   server.port=8080
+   client.json.path=src/main/resources/clientinfo/client.json
+   organisation.json.path=src/main/resources/orginfo/org.json
+   ```
 
-userIntent (file): The .txt file containing user intent.
-template (file): The .docx template file.
+## API Endpoints
 
+### Process User Request
+```
+POST /api/user-request
+Content-Type: multipart/form-data
 
-## Examples
-- **Input 1**:
-  - `userintent.txt`: "I want to transfer my pension from Aviva to Fidelity."
-  - Output: a `.docx` letter recommending a pension transfer from Aviva to Fidelity. It must contain details from the both the Aviva and Fidelity plans.
+Parameters:
+- userIntent (file): The .txt file containing user intent
+- template (file): The .docx template file
 
-- **Input 2**:
-  - `userintent.txt`: "I would like to consolidate my pensions into one provider."
-  - Output: a `.docx` letter detailing a consolidation of pensions.
+Response:
+- Content-Type: application/octet-stream
+- Body: Processed .docx document
+```
+
+## Example Usage
+
+1. Prepare the user intent file (userintent.txt):
+   ```
+   I want to transfer my pension from Aviva to Fidelity.
+   ```
+
+2. Send the request:
+   ```bash
+   curl -X POST http://localhost:8080/api/user-request \
+     -F "userIntent=@userintent.txt" \
+     -F "template=@template.docx" \
+     --output recommendation.docx
+   ```
+
+## Development
+
+1. Build the project:
+   ```bash
+   ./gradlew build
+   ```
+
+2. Run tests:
+   ```bash
+   ./gradlew test
+   ```
+
+3. Run the application:
+   ```bash
+   ./gradlew bootRun
+   ```
+
+## Testing
+
+The project includes unit tests for core functionality. Run tests with:
+```bash
+./gradlew test
+```
+
+## Dependencies
+
+- Spring Boot 3.2.2
+- Apache POI 5.2.5 for Word document processing
+- Gson 2.10.1 for JSON processing
+- Project Lombok for boilerplate reduction
+- JUnit 5 for testing
+
+## Error Handling
+
+The application includes comprehensive error handling for:
+- File processing errors
+- JSON parsing errors
+- Template processing errors
+- LLM service errors
 
 ## Contact
-If you have any questions, please email:
+
+For questions or support, please contact:
 - Logan.Gibson@automwrite.co.uk

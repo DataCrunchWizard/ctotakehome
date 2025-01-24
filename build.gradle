@@ -1,18 +1,14 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.4'
-    id 'io.spring.dependency-management' version '1.1.6'
+    id 'org.springframework.boot' version '3.2.2'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
-group = 'com.automwrite.assessment'
+group = 'com.automwrite'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17  // or whatever version you're using
-
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+    sourceCompatibility = '17'
 }
 
 configurations {
@@ -26,32 +22,24 @@ repositories {
 }
 
 dependencies {
-    // **Required dependencies**
-    // Apache.POI - for processing word documents
-    implementation 'org.apache.poi:poi:5.3.0'
-    implementation 'org.apache.poi:poi-ooxml:5.3.0'
-    implementation 'org.apache.xmlbeans:xmlbeans:5.2.1'
-
-    // Logging dependencies
-    implementation 'org.slf4j:slf4j-api:2.0.9'
-    implementation 'ch.qos.logback:logback-classic'
-    implementation 'ch.qos.logback:logback-core'
-
-    // JSON dependencies
-    implementation 'com.google.code.gson:gson:2.10.1'
-
-    // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
-
-    // Other
+    // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    
+    // Apache POI for Word document processing
+    implementation 'org.apache.poi:poi:5.2.5'
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    
+    // JSON processing
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
+    
+    // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'io.projectreactor:reactor-test'
 }
 
 tasks.named('test') {

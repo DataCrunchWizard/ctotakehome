@@ -1,10 +1,15 @@
 package com.automwrite.assessment.service;
 
-import java.util.concurrent.CompletableFuture;
+import com.automwrite.assessment.model.Client;
+import com.automwrite.assessment.model.Organisation;
 
 public interface LlmService {
-
-    String generateText(String prompt);
-
-    CompletableFuture<String> generateTextAsync(String prompt);
+    /**
+     * Process user intent using LLM to generate appropriate recommendation text
+     * @param userIntent Raw user intent text
+     * @param client Client information
+     * @param organisation Organisation information
+     * @return Processed recommendation text
+     */
+    String processUserIntent(String userIntent, Client client, Organisation organisation);
 }
