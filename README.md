@@ -81,17 +81,23 @@ Response:
 
 ## Development
 
-1. Build the project:
+1. First time setup:
+   ```bash
+   # Make gradlew executable
+   chmod +x gradlew
+   ```
+
+2. Build the project:
    ```bash
    ./gradlew build
    ```
 
-2. Run tests:
+3. Run tests:
    ```bash
    ./gradlew test
    ```
 
-3. Run the application:
+4. Run the application:
    ```bash
    ./gradlew bootRun
    ```

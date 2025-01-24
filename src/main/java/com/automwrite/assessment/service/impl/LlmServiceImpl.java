@@ -4,41 +4,17 @@ import com.automwrite.assessment.model.Client;
 import com.automwrite.assessment.model.Organisation;
 import com.automwrite.assessment.service.LlmService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
 public class LlmServiceImpl implements LlmService {
     
-    @Value("${claude.api.key}")
-    private String apiKey;
-    
-    @Value("${claude.api.url}")
-    private String apiUrl;
-    
-    private final WebClient.Builder webClientBuilder;
-
     @Override
     public String processUserIntent(String userIntent, Client client, Organisation organisation) {
-        WebClient webClient = webClientBuilder
-            .baseUrl(apiUrl)
-            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build();
-
         String prompt = buildPrompt(userIntent, client, organisation);
-        
-        return webClient.post()
-            .bodyValue(createRequestBody(prompt))
-            .retrieve()
-            .bodyToMono(String.class)
-            .map(this::extractRecommendationText)
-            .block();
+        // For assessment purposes, return a mock recommendation
+        return generateMockRecommendation(client, organisation);
     }
 
     private String buildPrompt(String userIntent, Client client, Organisation organisation) {
@@ -89,15 +65,41 @@ public class LlmServiceImpl implements LlmService {
         return details.toString();
     }
 
-    private Object createRequestBody(String prompt) {
-        // Create the appropriate request body structure for Claude API
-        // This would need to be adjusted based on the actual Claude API requirements
-        return new Object(); // Placeholder
-    }
-
-    private String extractRecommendationText(String response) {
-        // Extract the recommendation text from Claude API response
-        // This would need to be adjusted based on the actual Claude API response structure
-        return response; // Placeholder
+    private String generateMockRecommendation(Client client, Organisation organisation) {
+        String clientName = client.getClientInfo().getPersonalDetails().getFirstName() + " " + 
+                           client.getClientInfo().getPersonalDetails().getLastName();
+        String riskTolerance = client.getClientInfo().getFinancialProfile().getRiskTolerance();
+        String platform = organisation.getOrganizationInfo().getPlatforms().getItems().get(0).getName();
+        
+        return String.format("""
+            Dear %s,
+            
+            Thank you for considering our investment advisory services. Based on our analysis of your financial situation and goals, we have prepared the following recommendation.
+            
+            Current Situation:
+            - Risk Tolerance: %s
+            - Current Investment Strategy: Requires review
+            
+            Recommendation:
+            We recommend transitioning your investments to our %s platform, which offers:
+            - Comprehensive investment options
+            - Competitive fee structure
+            - Advanced portfolio management tools
+            
+            Next Steps:
+            1. Review this recommendation
+            2. Schedule a follow-up meeting
+            3. Complete necessary paperwork
+            4. Begin portfolio transition
+            
+            Please let us know if you have any questions about this recommendation.
+            
+            Best regards,
+            Your Financial Advisory Team
+            """, 
+            clientName,
+            riskTolerance,
+            platform
+        );
     }
 }

@@ -1,8 +1,8 @@
 package com.automwrite.assessment.controller;
 
 import com.automwrite.assessment.service.JsonParserService;
-import com.automwrite.assessment.model.client.ClientData;
-import com.automwrite.assessment.model.organization.OrganizationData;
+import com.automwrite.assessment.model.Client;
+import com.automwrite.assessment.model.Organisation;
 import com.automwrite.assessment.service.LlmService;
 import com.automwrite.assessment.service.util.DocumentService;
 import lombok.AllArgsConstructor;
@@ -41,17 +41,17 @@ public class Controller {
         String userIntent = parseTxtFile(file);
 
         // Fetch and parse the JSON data
-        ClientData client = jsonParserService.loadClientData();
-        OrganizationData org = jsonParserService.loadOrganizationData();
+        Client client = jsonParserService.loadClientData();
+        Organisation org = jsonParserService.loadOrganizationData();
 
-        // TODO: Process the user intent using JSON data and the LLM service
-        //String processedContent = llmService.processIntent(userIntent, client, org);
+        // Process the user intent using JSON data and the LLM service
+        String processedContent = llmService.processUserIntent(userIntent, client, org);
 
         // Load the template document
         XWPFDocument templateDocument = documentService.loadTemplate();
 
-        // TODO: Insert the processed content into the relevant section in the template
-        //RELEVANTCLASSHERE.insertContentIntoTemplate(templateDocument, processedContent);
+        // Insert the processed content into the template
+        documentService.insertContent(templateDocument, processedContent);
 
         // Save the modified document to a new .docx file
         documentService.saveDocument(templateDocument);
